@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="mn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Төрсөн өдрийн урилга</title>
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="theme-color" content="#ec4899" />
+  <style>
+    /* 🎊 Confetti animation */
+    @keyframes fall { to { transform: translateY(120vh) translateX(10px) rotate(720deg); opacity: .9; } }
+    .confetti span{position:absolute;top:-10%;left:50%;width:.5rem;height:.7rem;border-radius:.25rem;opacity:.8;animation:fall 8s linear infinite}
+    /* Glass effect */
+    .glass{background:rgba(255,255,255,.9);backdrop-filter:saturate(150%) blur(6px)}
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-fuchsia-500 via-pink-500 to-rose-500">
+  <!-- 🎊 Confetti -->
+  <div class="confetti pointer-events-none fixed inset-0 overflow-hidden" id="confetti"></div>
+
+  <!-- HERO -->
+  <section class="relative">
+    <div class="absolute inset-0 bg-black/40"></div>
+    <img id="coverImage" alt="cover" class="h-[56vh] w-full object-cover object-center" />
+    <div class="absolute inset-0 flex items-center justify-center px-6 text-center text-white">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 backdrop-blur border border-white/20 mb-4 text-sm tracking-wide">
+          <span>ТУСГАЙ УРИЛГА</span>
+        </div>
+        <h1 id="hostName" class="text-4xl md:text-6xl font-extrabold drop-shadow-lg leading-tight"></h1>
+        <p id="eventTitle" class="text-lg md:text-2xl mt-2 opacity-90"></p>
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-3 text-gray-900">
+          <span class="px-3 py-1 rounded-full bg-white/80 text-sm" id="pillDate"></span>
+          <span class="px-3 py-1 rounded-full bg-white/80 text-sm" id="pillTime"></span>
+          <span class="px-3 py-1 rounded-full bg-white/80 text-sm" id="pillVenue"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENT CARD -->
+  <section class="-mt-16 pb-24 px-4">
+    <div class="max-w-4xl mx-auto glass rounded-2xl shadow-2xl p-6 md:p-10">
+      <!-- Countdown -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6" id="countdown">
+        <!-- boxes injected -->
+      </div>
+
+      <div class="mt-8 grid md:grid-cols-2 gap-6 text-gray-700">
+        <!-- Info -->
+        <div class="space-y-4">
+          <h2 class="text-xl font-bold">Мэдээлэл</h2>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-3"><span>📅</span> <span id="infoDateTime"></span></li>
+            <li class="flex items-start gap-3"><span>📍</span> <span><b id="venueName"></b><br><span id="venueAddress"></span></span></li>
+            <li class="flex items-start gap-3"><span>📞</span> <a id="phoneLink" class="underline decoration-dotted" href="#"></a></li>
+          </ul>
+          <div class="flex flex-wrap gap-3 pt-2">
+            <!-- <a id="rsvpLink" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-black text-white shadow hover:opacity-90">RSVP хийх</a> -->
+            <a id="calendarLink" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gray-900/90 text-white hover:bg-gray-900">Calendar-т нэмэх</a>
+            <button id="shareBtn" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200">Хуваалцах</button>
+          </div>
+        </div>
+
+        <!-- Map & notes -->
+        <div class="space-y-4">
+          <h2 class="text-xl font-bold">Байршил</h2>
+          <div class="overflow-hidden rounded-xl shadow">
+            <iframe id="mapFrame" class="w-full h-48" style="border:0" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+          </div>
+          <div class="flex gap-3">
+            <a id="mapsLink" target="_blank" class="px-4 py-2 rounded-2xl bg-gray-900 text-white hover:opacity-90">Google Maps нээх</a>
+            <button id="copyAddressBtn" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200">Хаяг хуулax</button>
+          </div>
+          <div class="text-sm text-gray-500" id="note">Жич: Smart casual ✨ Cake-cut 20:00 цагт.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="pb-10 text-center text-white/90">
+    <div class="text-sm">© <span id="year"></span> Урилга — <span id="footerHost"></span></div>
+  </footer>
+
+  <script>
+    // ⚙️ ТОХИРУУЛГА — эндээс өөрийн мэдээллээ солиорой
+    const SETTINGS = {
+      hostName: "Сувданцэцэг",
+      eventTitle: "Төрсөн өдрийн урилга",
+      date: "2025-08-28", // YYYY-MM-DD
+      time: "11:00",      // HH:mm (24 цаг)
+      venueName: "X apartment",
+      venueAddress: "Улаанбаатар, Баянзүрх дүүрэг, 8-р хороо",
+      googleMapsQuery: "4 X Apartment 1", // шууд хайлтын query
+      phone: "+976 9907-2127",
+      rsvpLink: "https://forms.gle/", // эсвэл WhatsApp/FB event линк
+      coverImage: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?q=80&w=2400&auto=format&fit=crop",
+      note: "Жич: Smart casual ✨ Cake-cut 12:00 цагт.",
+      durationMins: 150
+    };
+
+    // 🖼 Cover
+    document.getElementById('coverImage').src = SETTINGS.coverImage;
+
+    // 🏷 Texts
+    hostName.textContent = SETTINGS.hostName;
+    eventTitle.textContent = SETTINGS.eventTitle;
+    pillDate.textContent = `Өдөр: ${SETTINGS.date}`;
+    pillTime.textContent = `Цаг: ${SETTINGS.time}`;
+    pillVenue.textContent = `Байршил: ${SETTINGS.venueName}`;
+    infoDateTime.textContent = new Date(`${SETTINGS.date}T${SETTINGS.time}:00`).toLocaleString();
+    venueName.textContent = SETTINGS.venueName;
+    venueAddress.textContent = SETTINGS.venueAddress;
+    phoneLink.textContent = SETTINGS.phone;
+    phoneLink.href = `tel:${SETTINGS.phone}`;
+    document.getElementById('note').textContent = SETTINGS.note;
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('footerHost').textContent = SETTINGS.hostName;
+
+    // 🗺 Maps (iframe embed without API key)
+    const mapsQ = encodeURIComponent(SETTINGS.googleMapsQuery || SETTINGS.venueAddress);
+    mapFrame.src = `https://www.google.com/maps?q=${mapsQ}&output=embed`;
+    mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${mapsQ}`;
+
+    // 📅 Google Calendar URL
+    function toUTCStamp(date){
+      const d = new Date(date);
+      const pad = (n)=> String(n).padStart(2,'0');
+      return `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+    }
+    const startLocal = new Date(`${SETTINGS.date}T${SETTINGS.time}:00`);
+    const endLocal = new Date(startLocal.getTime() + (SETTINGS.durationMins||120)*60000);
+    const calParams = new URLSearchParams({
+      text: `${SETTINGS.hostName} — ${SETTINGS.eventTitle}`,
+      details: 'Та урилгад ирнэ үү! Дуу хөгжим, амттай cake, зугаатай мөчүүд.',
+      location: `${SETTINGS.venueName}, ${SETTINGS.venueAddress}`,
+      dates: `${toUTCStamp(startLocal)}/${toUTCStamp(endLocal)}`
+    }).toString();
+    calendarLink.href = `https://calendar.google.com/calendar/render?action=TEMPLATE&${calParams}`;
+
+    // // 🔗 RSVP
+    // rsvpLink.href = SETTINGS.rsvpLink;
+
+    // 📤 Share API (fallback: clipboard)
+    shareBtn.addEventListener('click', async () => {
+      const text = `${SETTINGS.hostName} — ${SETTINGS.eventTitle}\n${new Date(`${SETTINGS.date}T${SETTINGS.time}:00`).toLocaleString()}\n${SETTINGS.venueName}, ${SETTINGS.venueAddress}`;
+      try{
+        if(navigator.share){ await navigator.share({ title: document.title, text, url: location.href }); }
+        else{ await navigator.clipboard.writeText(text + "\n" + location.href); alert('Линк хууллаа!'); }
+      }catch(e){ console.log(e); }
+    });
+
+    // 📋 Copy address
+    copyAddressBtn.addEventListener('click', async () => {
+      try{ await navigator.clipboard.writeText(`${SETTINGS.venueName}, ${SETTINGS.venueAddress}`); alert('Хаягийг хууллаа!'); }catch(e){ console.log(e); }
+    });
+
+    // ⏳ Countdown
+    function renderCountdown(){
+      const target = new Date(`${SETTINGS.date}T${SETTINGS.time}:00`).getTime();
+      const now = Date.now();
+      const diff = Math.max(0, target - now);
+      const total = Math.floor(diff/1000);
+      const days = Math.floor(total / 86400);
+      const hours = Math.floor((total % 86400) / 3600);
+      const minutes = Math.floor((total % 3600) / 60);
+      const seconds = total % 60;
+      countdown.innerHTML = ''+
+        box('Өдөр', days)+
+        box('Цаг', hours)+
+        box('Минут', minutes)+
+        box('Секунд', seconds);
+    }
+    function box(label, value){
+      return `<div class="text-center"><div class="text-3xl md:text-5xl font-black tracking-tight">${String(value).padStart(2,'0')}</div><div class="text-xs md:text-sm uppercase tracking-wide text-gray-500">${label}</div></div>`;
+    }
+    renderCountdown();
+    setInterval(renderCountdown, 1000);
+
+    // 🎊 Confetti pieces
+    (function(){
+      const root = document.getElementById('confetti');
+      for(let i=0;i<60;i++){
+        const s = document.createElement('span');
+        s.style.transform = `translateX(${(i-30)*12}px)`;
+        s.style.background = `hsl(${(i*47)%360} 90% 60%)`;
+        s.style.animationDelay = `${(i%10)*.2}s`;
+        root.appendChild(s);
+      }
+    })();
+  </script>
+</body>
+</html>
